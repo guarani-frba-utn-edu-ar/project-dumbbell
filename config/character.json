@@ -1,0 +1,10 @@
+{
+  "width": 70,
+
+  "speed": 400,
+  "screenPositionX": 0.4,
+  "animation": {
+    "frameCount": 4,
+    "fps": 8
+  }
+}

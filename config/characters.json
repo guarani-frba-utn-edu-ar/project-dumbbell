@@ -1,0 +1,29 @@
+[
+  {
+    "id": "female_fox",
+    "idleImage": "female_fox.png",
+    "walkSheet": "female_fox_walk-spriteSheet.png",
+    "animation": {
+      "frameCount": 4,
+      "fps": 8
+    },
+    "width": 100,
+    "height": 100,
+    "xOffset": 0,
+    "speed": 250,
+    "screenPositionX": 0.4
+  },
+  {
+    "id": "mateo",
+    "idleImage": "mateo.png",
+    "walkSheet": "mateo_walk-spriteSheet.png",
+    "animation": {
+      "frameCount": 4,
+      "fps": 8
+    },
+    "width": 100,
+    "height": 100,
+    "xOffset": 70,
+    "speed": 20
+  }
+]

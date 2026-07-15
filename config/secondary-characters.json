@@ -1,0 +1,54 @@
+{
+  "mainToSecondaryGap": 100,
+  "secondaryToSecondaryGap": 20,
+  "dropHeight": 20,
+  "dropDuration": 0.2,
+  "characters": [
+    {
+      "id": "penguin",
+      "idleImage": "penguin.png",
+      "walkSheet": "penguin_walk-spriteSheet.png",
+      "animation": {
+        "frameCount": 4,
+        "fps": 8
+      },
+      "width": 90,
+      "height": null,
+      "spawnX": 500
+    },
+    {
+      "id": "tonito",
+      "idleImage": "tonito.png",
+      "walkSheet": "tonito_walk-spriteSheet.png",
+      "animation": {
+        "frameCount": 4,
+        "fps": 8
+      },
+      "width": 80,
+      "height": null,
+      "spawnX": 1200
+    },
+    {
+      "id": "brisa",
+      "idleImage": "brisa.png",
+      "walkSheet": "brisa_walk-spriteSheet.png",
+      "animation": {
+        "frameCount": 4,
+        "fps": 8
+      },
+      "width": 90,
+      "height": null,
+      "spawnX": 1400
+    },
+    {
+      "id": "ayolote",
+      "idleImage": "ayolote.png",
+      "walkSheet": null,
+      "animation": null,
+      "width": 90,
+      "height": null,
+      "spawnX": 1600
+    }
+
+  ]
+}
