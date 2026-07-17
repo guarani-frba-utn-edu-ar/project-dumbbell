@@ -31,7 +31,7 @@ export class DebugOverlay {
 
     const roadCenterY = canvasHeight * this.roadConfig.verticalCenter;
 
-    const Y_LIMIT    = 1500;
+    const Y_LIMIT    = this.roadConfig.yLimit;
     const Y_STEP     = 250;   // horizontal grid lines every 250 Y units
     const X_STEP     = 500;   // vertical grid lines every 500 X units
 

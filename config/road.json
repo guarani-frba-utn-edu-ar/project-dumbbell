@@ -1,5 +1,6 @@
 {
   "tileWidth": 200,
   "height": 100,
-  "verticalCenter": 0.54
+  "verticalCenter": 0.54,
+  "yLimit": 1500
 }

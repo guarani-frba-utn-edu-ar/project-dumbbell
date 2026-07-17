@@ -38,8 +38,8 @@ export class Scenarios {
       // Frustum cull (horizontal)
       if (screenX + item.width < 0 || screenX > canvasWidth) continue;
 
-      // Y boundary clamp: skip items whose top edge is outside ±1500 world units
-      if (item.y < -1500 || item.y > 1500) continue;
+      // Y boundary clamp: skip items whose top edge is outside ±yLimit world units
+      if (item.y < -this.roadConfig.yLimit || item.y > this.roadConfig.yLimit) continue;
 
       const img = this.images[item.image];
       if (!img) continue;
