@@ -3,60 +3,51 @@
     {
       "image": "parque_avellaneda.png",
       "worldX": 400,
-      "side": "top",
+      "y": -650,
       "width": 650,
-      "height": 600,
-      "gap": 0
+      "height": 600
     },
     {
       "image": "cementerio_recoleta.png",
       "worldX": 1200,
-      "side": "bottom",
+      "y": 50,
       "width": 580,
-      "height": 460,
-      "gap": 0
+      "height": 460
     },
     {
       "image": "lagos-palermo.png",
       "worldX": 2000,
-      "side": "top",
+      "y": -530,
       "width": 580,
-      "height": 480,
-      "gap": 0
+      "height": 480
     },
     {
       "image": "china_town.png",
       "worldX": 2800,
-      "side": "bottom",
+      "y": 50,
       "width": 480,
-      "height": 460,
-      "gap": 0
+      "height": 460
     },
     {
       "image": "telo.png",
       "worldX": 3600,
-      "side": "top",
+      "y": -510,
       "width": 580,
-      "height": 460,
-      "gap": 0
+      "height": 460
     },
     {
       "image": "pileta-chacabuco.png",
       "worldX": 4400,
-      "side": "bottom",
+      "y": 50,
       "width": 680,
-      "height": 520,
-      "gap": 0
+      "height": 520
     },
     {
       "image": "kartings.png",
       "worldX": 5200,
-      "side": "top",
+      "y": -510,
       "width": 680,
-      "height": 460,
-      "gap": 0
+      "height": 460
     }
-
-
   ]
 }

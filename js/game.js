@@ -6,6 +6,7 @@ import { Scenarios }         from './scenarios.js';
 import { InputHandler }      from './input.js';
 import { SecondaryCharacter } from './secondary-character.js';
 import { PositionTrail }      from './position-trail.js';
+import { DebugOverlay }       from './debug-overlay.js';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -57,10 +58,15 @@ class Game {
     // to always stand exactly where main was at their gap distance ago.
     this._trail = new PositionTrail(2);
 
+    this.debugOverlay = new DebugOverlay(configs.road);
+
     this._lastTime = null;
 
     this._resize();
     window.addEventListener('resize', () => this._resize());
+    window.addEventListener('keydown', e => {
+      if (e.code === 'KeyD') this.debugOverlay.toggle();
+    });
   }
 
   _resize() {
@@ -183,6 +189,13 @@ class Game {
       const screenX = this._worldX + char.config.xOffset - cameraX;
       char.draw(ctx, screenX, roadBounds.y, roadBounds.height);
     }
+
+    // 6. Debug overlay (drawn last, on top of everything)
+    this.debugOverlay.draw(
+      ctx, cameraX, W, H,
+      this.scenarios.getWorldBoundary(),
+      this._worldX
+    );
   }
 
   _loop(timestamp) {
