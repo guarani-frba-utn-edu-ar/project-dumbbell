@@ -29,23 +29,23 @@ export class Scenarios {
 
   draw(ctx, cameraX, canvasWidth, canvasHeight) {
     const { items } = this.config;
-    const { height: roadHeight, verticalCenter } = this.roadConfig;
-    const roadY = canvasHeight * verticalCenter - roadHeight / 2;
+    const { verticalCenter } = this.roadConfig;
+    const roadCenterY = canvasHeight * verticalCenter;
 
     for (const item of items) {
       const screenX = item.worldX - cameraX;
 
-      // Frustum cull
+      // Frustum cull (horizontal)
       if (screenX + item.width < 0 || screenX > canvasWidth) continue;
+
+      // Y boundary clamp: skip items whose top edge is outside ±yLimit world units
+      if (item.y < -this.roadConfig.yLimit || item.y > this.roadConfig.yLimit) continue;
 
       const img = this.images[item.image];
       if (!img) continue;
 
-      const y = item.side === 'top'
-        ? roadY - item.gap - item.height
-        : roadY + roadHeight + item.gap;
-
-      ctx.drawImage(img, screenX, y, item.width, item.height);
+      const screenY = roadCenterY + item.y;
+      ctx.drawImage(img, screenX, screenY, item.width, item.height);
     }
   }
 }
