@@ -26,6 +26,7 @@ js/
   character.js
   secondary-character.js
   scenarios.js
+  debug-overlay.js
   game.js
 background/
   grass-background.png
@@ -55,12 +56,14 @@ All configs are JSON, loaded in parallel by `js/config.js` via `fetch`.
 {
   "tileWidth": 200,
   "height": 100,
-  "verticalCenter": 0.54
+  "verticalCenter": 0.54,
+  "yLimit": 700
 }
 ```
 - `tileWidth` — pixel width of each `dirt-road.png` tile
 - `height` — pixel height of the road strip
 - `verticalCenter` — vertical position of the road center as a fraction of canvas height (0 = top, 1 = bottom)
+- `yLimit` — half-height of the world in Y world units; objects with a `y` value outside `[-yLimit, +yLimit]` are not drawn. Also controls the boundary lines shown by the debug overlay.
 
 ---
 
@@ -137,7 +140,7 @@ Secondary characters are sorted by `spawnX` at startup; the one with the lowest 
 ---
 
 ### `config/scenarios.json`
-Decorative images placed beside the road at absolute world X positions. The world ends at the right edge of the furthest scenario — the player cannot move past it.
+Decorative images placed beside the road at absolute world positions. The world ends at the right edge of the furthest scenario — the player cannot move past it.
 
 ```json
 {
@@ -145,10 +148,9 @@ Decorative images placed beside the road at absolute world X positions. The worl
     {
       "image": "parque_avellaneda.png",
       "worldX": 400,
-      "side": "top",
+      "y": -650,
       "width": 600,
-      "height": 600,
-      "gap": 0
+      "height": 600
     }
   ]
 }
@@ -156,9 +158,12 @@ Decorative images placed beside the road at absolute world X positions. The worl
 
 - `image` — filename inside `scenarios/`
 - `worldX` — absolute world X of the image's left edge
-- `side` — `"top"` (above the road) or `"bottom"` (below the road)
+- `y` — world Y of the image's **top edge**, relative to the road centre (`Y=0`). Negative = above the road, positive = below. Items outside `[-yLimit, +yLimit]` are not drawn at runtime.
 - `width`, `height` — display size in pixels
-- `gap` — additional pixel distance between the road edge and the image
+
+> **Migration note:** the old `side` / `gap` fields have been replaced by `y`. The equivalent formulas are:
+> - `side: "top"`, `gap: G`, `height: H` → `y = -(roadHeight/2 + G + H)`
+> - `side: "bottom"`, `gap: G` → `y = roadHeight/2 + G`
 
 ---
 
@@ -196,7 +201,16 @@ Three-state machine: `pending → dropping → active`.
 - `draw(ctx, cameraX, roadY, roadHeight, dropHeight)` — shows idle during drop, idle or walk sheet when active
 
 ### `js/scenarios.js` — `Scenarios`
-Renders scenario images at their absolute world positions. Items off-screen are culled. `getWorldBoundary()` returns the rightmost edge of all items and is used to clamp player movement.
+Renders scenario images at their absolute world positions. Screen Y is computed as `roadCenterY + item.y`. Items outside `[-yLimit, +yLimit]` (read from `roadConfig.yLimit`) or outside the horizontal viewport are skipped. `getWorldBoundary()` returns the rightmost edge of all items and is used to clamp player movement.
+
+### `js/debug-overlay.js` — `DebugOverlay`
+Toggleable coordinate-system visualiser drawn on top of every frame.
+- `toggle()` — flips `enabled`; called by `Game` on **D** key press
+- `draw(ctx, cameraX, canvasWidth, canvasHeight, worldBoundary, worldX)` — when enabled, renders:
+  - Dashed horizontal grid lines every 250 Y units; solid red lines at `Y = ±yLimit`
+  - Dashed vertical grid lines every 500 X units; solid red lines at `X = 0` and `X = worldBoundary`
+  - Top-right HUD showing current `worldX` and `cameraX`
+  - `[D] toggle debug` hint in the bottom-left corner
 
 ### `js/game.js` — `Game`
 Central orchestrator. Key responsibilities:
@@ -223,6 +237,20 @@ Central orchestrator. Key responsibilities:
 4. Active secondary characters (furthest-back drawn first for z-order)
 5. Dropping secondary characters (mid-air, drawn above active line)
 6. Main characters (always on top)
+7. Debug overlay (toggled with **D** key; drawn last so it is always visible)
+
+---
+
+## Coordinate System
+
+The world uses a 2-axis coordinate system centred on the road:
+
+- **X** — horizontal world position in pixels. `0` = left boundary (world start); increases to the right. Maximum is the right edge of the furthest scenario (`worldBoundary`).
+- **Y** — vertical world position in pixels, relative to the **road centre**. `0` = road centre; negative = above the road; positive = below the road. Objects outside `[-yLimit, +yLimit]` are not drawn. `yLimit` is set in `config/road.json`.
+
+Screen-space conversion:
+- `screenX = worldX - cameraX`
+- `screenY = roadCenterY + worldY` (where `roadCenterY = canvasHeight × verticalCenter`)
 
 ---
 
@@ -258,4 +286,9 @@ Add an entry to `config/secondary-characters.json` with a unique `spawnX`. Place
 Set `walkSheet` to the sprite sheet filename and `animation: { "frameCount": N, "fps": F }` in the relevant config entry.
 
 ### Add a new scenario
-Add an entry to `config/scenarios.json`. Place the image in `scenarios/`. The world boundary automatically extends to include it.
+Add an entry to `config/scenarios.json` with a `y` value (world Y of the image's top edge, relative to road centre). Place the image in `scenarios/`. The world boundary automatically extends to include it.
+
+Quick reference for `y`:
+- To place `height`-tall image flush above the road: `y = -(roadHeight/2 + height)`
+- To place an image flush below the road: `y = roadHeight/2`
+- Add gap pixels to either formula to add spacing between the image and the road edge.
