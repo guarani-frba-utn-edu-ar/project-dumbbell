@@ -1,0 +1,28 @@
+{
+  "seed": 100,
+  "minGap": 5,
+  "rows": {
+    "above": [
+      { "gap": 0   },
+      { "gap": 150 },
+      { "gap": 300 },
+      { "gap": 450 },
+      { "gap": 600 }
+    ],
+    "below": [
+      { "gap": 0   },
+      { "gap": 150 },
+      { "gap": 300 },
+      { "gap": 500 }
+    ]
+  },
+  "objects": [
+    { "image": "arbol1_pasto.png",  "width": 160 },
+    { "image": "arbol2.png",  "width": 160 },
+    { "image": "arbol3.png",  "width": 160 },
+    { "image": "arbol4.png",  "width": 160 },
+    { "image": "arbusto1.png","width": 100 },
+    { "image": "arbusto2.png","width": 100 },
+    { "image": "arbusto3_pastp.png","width": 100 }
+  ]
+}

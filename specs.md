@@ -17,6 +17,7 @@ config/
   characters.json
   secondary-characters.json
   scenarios.json
+  objects.json
 js/
   config.js
   input.js
@@ -26,11 +27,20 @@ js/
   character.js
   secondary-character.js
   scenarios.js
+  objects.js
   debug-overlay.js
   game.js
 background/
   grass-background.png
   dirt-road.png
+  objects/
+    arbol1.png
+    arbol2.png
+    arbol3.png
+    arbol4.png
+    arbusto1.png
+    arbusto2.png
+    arbusto3.png
 characters/
   female_fox.png
   female_fox_walk-spriteSheet.png
@@ -167,10 +177,56 @@ Decorative images placed beside the road at absolute world positions. The world 
 
 ---
 
+### `config/objects.json`
+Controls the decorative objects (trees, bushes, etc.) that fill the space beside the road. Placements are generated deterministically from a seed at startup.
+
+```json
+{
+  "seed": 100,
+  "minGap": 5,
+  "rows": {
+    "above": [
+      { "gap": 0   },
+      { "gap": 200 },
+      { "gap": 400 },
+      { "gap": 600 }
+    ],
+    "below": [
+      { "gap": 0   },
+      { "gap": 150 },
+      { "gap": 300 },
+      { "gap": 450 }
+    ]
+  },
+  "objects": [
+    { "image": "arbol1.png", "width": 160 }
+  ]
+}
+```
+
+- `seed` — integer seed for the PRNG; changing it produces a completely different layout while keeping the same density
+- `minGap` — minimum pixel gap between adjacent objects within the same row
+- `rows.above` — array of rows placed above the road; each entry defines one horizontal band. Add or remove entries to change the number of rows
+- `rows.below` — same for below the road
+- `rows.*.gap` — pixel distance from the road edge to the **nearest edge** of objects in that row. For above rows this is the distance from the road top edge to the object bottom edge; for below rows it is the distance from the road bottom edge to the object top edge
+- `objects` — pool of objects to pick from randomly. Each entry has:
+  - `image` — filename inside `background/objects/`
+  - `width` — display width in pixels; height is computed automatically from the image's natural aspect ratio
+
+**Row draw order (above side):** rows are drawn farthest-first so the row with the smallest `gap` (closest to the road) always appears in front.
+
+**Scenario interaction:** at a scenario's X range, a row is only allowed to place objects if its `gap` is large enough to clear the scenario image boundary:
+- Above row at an above-side scenario: requires `gap ≥ -scenario.y - roadHeight/2`
+- Below row at a below-side scenario: requires `roadHeight/2 + gap ≥ scenario.y + scenario.height`
+- Rows that do not meet the threshold skip that X range; rows that do place objects beyond the scenario image.
+- The **opposite** side of every scenario (e.g. below the road where a scenario is above) is always unrestricted.
+
+---
+
 ## JavaScript Modules
 
 ### `js/config.js`
-Loads all four config files in parallel with `Promise.all` and returns `{ road, characters, secondaryCharacters, scenarios }`.
+Loads all five config files in parallel with `Promise.all` and returns `{ road, characters, secondaryCharacters, scenarios, objects }`.
 
 ### `js/input.js` — `InputHandler`
 Tracks `left` and `right` boolean flags via `keydown`/`keyup` on `ArrowLeft`/`ArrowRight`. A single instance is shared so all characters always respond to the same input.
@@ -203,6 +259,20 @@ Three-state machine: `pending → dropping → active`.
 ### `js/scenarios.js` — `Scenarios`
 Renders scenario images at their absolute world positions. Screen Y is computed as `roadCenterY + item.y`. Items outside `[-yLimit, +yLimit]` (read from `roadConfig.yLimit`) or outside the horizontal viewport are skipped. `getWorldBoundary()` returns the rightmost edge of all items and is used to clamp player movement.
 
+### `js/objects.js` — `WorldObjects`
+Generates and renders the decorative objects (trees, bushes, etc.) that fill the space beside the road.
+
+Construction: `new WorldObjects(images, config, roadConfig, scenariosConfig, worldBoundary)`
+
+All placements are computed once in the constructor using a **Mulberry32 seeded PRNG**, so the layout is fully deterministic. Two independent sets of passes are run:
+
+- **Above passes** — one pass per entry in `config.rows.above`. Each row fills its free X intervals left-to-right, packing objects with `minGap` spacing. A scenario's X range is blocked for a given row if the row's `gap` is too small to place the object's bottom edge above the scenario's top edge.
+- **Below passes** — same logic for `config.rows.below`, checking the object's top edge against each below-scenario's bottom edge.
+
+The above-side rows are appended to the draw list **farthest-first** (largest `gap` first), so the row closest to the road is drawn on top. Below-side rows are appended in config order.
+
+Objects are frustum-culled horizontally on every draw call.
+
 ### `js/debug-overlay.js` — `DebugOverlay`
 Toggleable coordinate-system visualiser drawn on top of every frame.
 - `toggle()` — flips `enabled`; called by `Game` on **D** key press
@@ -234,10 +304,11 @@ Central orchestrator. Key responsibilities:
 1. Background (full-screen mirrored tiles)
 2. Road (horizontal strip)
 3. Scenarios
-4. Active secondary characters (furthest-back drawn first for z-order)
-5. Dropping secondary characters (mid-air, drawn above active line)
-6. Main characters (always on top)
-7. Debug overlay (toggled with **D** key; drawn last so it is always visible)
+4. World objects (trees, bushes — drawn in front of scenarios)
+5. Active secondary characters (furthest-back drawn first for z-order)
+6. Dropping secondary characters (mid-air, drawn above active line)
+7. Main characters (always on top)
+8. Debug overlay (toggled with **D** key; drawn last so it is always visible)
 
 ---
 
@@ -292,3 +363,12 @@ Quick reference for `y`:
 - To place `height`-tall image flush above the road: `y = -(roadHeight/2 + height)`
 - To place an image flush below the road: `y = roadHeight/2`
 - Add gap pixels to either formula to add spacing between the image and the road edge.
+
+### Add a new world object type
+Add an entry to the `objects` array in `config/objects.json` with the `image` filename (inside `background/objects/`) and the desired `width`. The object will be picked randomly alongside the existing pool.
+
+### Add or remove object rows
+Add or remove entries in `config.rows.above` or `config.rows.below` in `config/objects.json`. Each entry needs only a `gap` value (pixels from road edge to nearest object edge). Rows with larger `gap` values sit further from the road and will automatically clear taller scenario images.
+
+### Change the object layout
+Set a different `seed` integer in `config/objects.json`. The entire layout regenerates deterministically — every seed produces a unique but reproducible arrangement.

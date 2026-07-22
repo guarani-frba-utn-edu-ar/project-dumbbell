@@ -3,6 +3,7 @@ import { Background }        from './background.js';
 import { Road }              from './road.js';
 import { Character }         from './character.js';
 import { Scenarios }         from './scenarios.js';
+import { WorldObjects }      from './objects.js';
 import { InputHandler }      from './input.js';
 import { SecondaryCharacter } from './secondary-character.js';
 import { PositionTrail }      from './position-trail.js';
@@ -34,6 +35,10 @@ class Game {
     this.background = new Background(images.background);
     this.road       = new Road(images.road, configs.road);
     this.scenarios  = new Scenarios(images.scenarios, configs.scenarios, configs.road);
+
+    // World objects (trees, bushes) — generated deterministically from seed
+    const worldBoundary = Math.max(...configs.scenarios.items.map(i => i.worldX + i.width));
+    this.worldObjects = new WorldObjects(images.objects, configs.objects, configs.road, configs.scenarios, worldBoundary);
 
     // One Character instance per entry in configs.characters
     this.characters = configs.characters.map(
@@ -169,10 +174,13 @@ class Game {
     // 3. Scenarios (above / below the road)
     this.scenarios.draw(ctx, cameraX, W, H);
 
+    // 4. World objects (trees, bushes — in front of scenarios)
+    this.worldObjects.draw(ctx, cameraX, W, H);
+
     const roadBounds = this.road.getBounds(H);
     const { dropHeight } = this.configs.secondaryCharacters;
 
-    // 4. Secondary characters behind the main group.
+    // 5. Secondary characters behind the main group.
     //    Active ones drawn back-to-front (furthest back first) for correct z-order.
     for (let i = this._activeSecondaries.length - 1; i >= 0; i--) {
       this._activeSecondaries[i].draw(ctx, cameraX, roadBounds.y, roadBounds.height, dropHeight);
@@ -184,13 +192,13 @@ class Game {
       }
     }
 
-    // 5. Main characters (always in front)
+    // 6. Main characters (always in front)
     for (const char of this.characters) {
       const screenX = this._worldX + char.config.xOffset - cameraX;
       char.draw(ctx, screenX, roadBounds.y, roadBounds.height);
     }
 
-    // 6. Debug overlay (drawn last, on top of everything)
+    // 7. Debug overlay (drawn last, on top of everything)
     this.debugOverlay.draw(
       ctx, cameraX, W, H,
       this.scenarios.getWorldBoundary(),
@@ -257,12 +265,22 @@ async function main() {
   );
   const scenarioImages = Object.fromEntries(scenarioEntries);
 
+  // Load world object images (trees, bushes, etc.)
+  const uniqueObjectNames = [...new Set(configs.objects.objects.map(o => o.image))];
+  const objectEntries = await Promise.all(
+    uniqueObjectNames.map(name =>
+      loadImage(`./background/objects/${name}`).then(img => [name, img])
+    )
+  );
+  const objectImages = Object.fromEntries(objectEntries);
+
   const images = {
     background:          bgImg,
     road:                roadImg,
     characters:          characterImages,
     secondaryCharacters: secondaryCharImages,
     scenarios:           scenarioImages,
+    objects:             objectImages,
   };
 
   const game = new Game(canvas, configs, images);
