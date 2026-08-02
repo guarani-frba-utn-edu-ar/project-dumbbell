@@ -1,53 +1,89 @@
 {
   "items": [
     {
-      "image": "parque_avellaneda.png",
+      "image": "gym-pasto.png",
       "worldX": 400,
+      "y": -550,
+      "width": 600,
+      "height": 500
+    },
+    {
+      "image": "cinema-devoto-pasto.png",
+      "worldX": 1700,
+      "y": 50,
+      "width": 600,
+      "height": 500
+    },
+
+    {
+      "image": "parque_avellaneda.png",
+      "worldX": 3000,
       "y": -650,
       "width": 650,
       "height": 600
     },
     {
-      "image": "cementerio_recoleta.png",
-      "worldX": 1200,
+      "image": "cementerio-recoleta_pasto.png",
+      "worldX": 4300,
       "y": 50,
       "width": 580,
-      "height": 460
+      "height": 500
+    },
+     {
+      "image": "meme_chii_pasto.png",
+      "worldX": 5800,
+      "y": 80,
+      "width": 200,
+      "height": 300
     },
     {
-      "image": "lagos-palermo.png",
-      "worldX": 2000,
+      "image": "lagos-palermo_pasto.png",
+      "worldX": 5600,
       "y": -530,
       "width": 580,
       "height": 480
     },
     {
-      "image": "china_town.png",
-      "worldX": 2800,
+      "image": "barrio-chino-pasto.png",
+      "worldX": 6900,
       "y": 50,
-      "width": 480,
+      "width": 500,
       "height": 460
     },
     {
       "image": "telo_pasto.png",
-      "worldX": 3600,
+      "worldX": 8200,
       "y": -510,
       "width": 580,
       "height": 460
     },
     {
-      "image": "pileta-chacabuco.png",
-      "worldX": 4400,
+      "image": "pileta-chacabuco_pasto.png",
+      "worldX": 9500,
       "y": 50,
-      "width": 680,
-      "height": 520
+      "width": 600,
+      "height": 420
     },
     {
-      "image": "kartings.png",
-      "worldX": 5200,
+      "image": "meme_nutria_pasto.png",
+      "worldX": 11000,
+      "y": 80,
+      "width": 200,
+      "height": 250
+    },
+    {
+      "image": "kartings-pasto.png",
+      "worldX": 10800,
       "y": -510,
       "width": 680,
       "height": 460
+    },
+    {
+      "image": "barrio-ingles_pasto.png",
+      "worldX": 12100,
+      "y": 50,
+      "width": 600,
+      "height": 500
     }
   ]
 }

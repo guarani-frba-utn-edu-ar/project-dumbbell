@@ -14,7 +14,7 @@
       },
       "width": 90,
       "height": null,
-      "spawnX": 500
+      "spawnX": 2000
     },
     {
       "id": "tonito",
@@ -26,7 +26,7 @@
       },
       "width": 80,
       "height": null,
-      "spawnX": 1200
+      "spawnX": 4000
     },
     {
       "id": "brisa",
@@ -38,16 +38,19 @@
       },
       "width": 90,
       "height": null,
-      "spawnX": 1400
+      "spawnX": 6000
     },
     {
       "id": "ayolote",
       "idleImage": "ayolote.png",
-      "walkSheet": null,
-      "animation": null,
+      "walkSheet": "ayolote_walk-spriteSheet.png",
+      "animation": {
+        "frameCount": 4,
+        "fps": 8
+      },
       "width": 90,
       "height": null,
-      "spawnX": 1600
+      "spawnX": 8000
     }
 
   ]
