@@ -236,14 +236,17 @@ async function main() {
     loadImage('./background/dirt-road.png'),
   ]);
 
-  // Load idle + walk sheet for every character in parallel
+  // Load idle + walk sheet + idle sheet for every character in parallel
   const characterImages = await Promise.all(
     configs.characters.map(charConfig => Promise.all([
       loadImage(`./characters/${charConfig.idleImage}`),
       charConfig.walkSheet
         ? loadImage(`./characters/${charConfig.walkSheet}`)
         : Promise.resolve(null),
-    ]).then(([idle, walkSheet]) => ({ idle, walkSheet })))
+      charConfig.idleSheet
+        ? loadImage(`./characters/${charConfig.idleSheet}`)
+        : Promise.resolve(null),
+    ]).then(([idle, walkSheet, idleSheet]) => ({ idle, walkSheet, idleSheet })))
   );
 
   // Load images for every secondary character in parallel
@@ -253,7 +256,10 @@ async function main() {
       charConfig.walkSheet
         ? loadImage(`./characters/${charConfig.walkSheet}`)
         : Promise.resolve(null),
-    ]).then(([idle, walkSheet]) => ({ idle, walkSheet })))
+      charConfig.idleSheet
+        ? loadImage(`./characters/${charConfig.idleSheet}`)
+        : Promise.resolve(null),
+    ]).then(([idle, walkSheet, idleSheet]) => ({ idle, walkSheet, idleSheet })))
   );
 
   // Load scenario images

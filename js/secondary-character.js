@@ -23,8 +23,15 @@ export class SecondaryCharacter {
     this.facingRight = true;  // set each frame by the Game via the trail
 
     this._dropProgress = 0;
+    this._isMoving     = false;
     this._frameIndex   = 0;
     this._frameTimer   = 0;
+
+    // Idle animation state
+    this._playingIdle    = false;
+    this._idleFrameIndex = 0;
+    this._idleFrameTimer = 0;
+    this._idleTimer      = 0;
 
     this._renderWidth  = config.width;
     this._renderHeight = config.height != null
@@ -62,18 +69,58 @@ export class SecondaryCharacter {
    * @param {boolean} isMoving
    */
   updateAnimation(dt, isMoving) {
-    const hasAnim = this.images.walkSheet && this.config.animation;
+    this._isMoving = isMoving;
+    const hasWalkAnim = this.images.walkSheet && this.config.animation;
+    const hasIdleAnim = this.images.idleSheet && this.config.idleAnimationConfig;
 
-    if (isMoving && hasAnim) {
-      this._frameTimer += dt;
-      const frameDuration = 1 / this.config.animation.fps;
-      if (this._frameTimer >= frameDuration) {
-        this._frameTimer -= frameDuration;
-        this._frameIndex  = (this._frameIndex + 1) % this.config.animation.frameCount;
+    if (isMoving) {
+      if (hasWalkAnim) {
+        this._frameTimer += dt;
+        const frameDuration = 1 / this.config.animation.fps;
+        if (this._frameTimer >= frameDuration) {
+          this._frameTimer -= frameDuration;
+          this._frameIndex  = (this._frameIndex + 1) % this.config.animation.frameCount;
+        }
+      } else {
+        this._frameIndex = 0;
+        this._frameTimer = 0;
       }
+      // Interrupt any in-progress idle animation immediately
+      this._playingIdle    = false;
+      this._idleFrameIndex = 0;
+      this._idleFrameTimer = 0;
+      this._idleTimer      = 0;
     } else {
+      // Standing still — reset walk state
       this._frameIndex = 0;
       this._frameTimer = 0;
+
+      if (hasIdleAnim) {
+        if (this._playingIdle) {
+          // Advance idle animation
+          this._idleFrameTimer += dt;
+          const frameDuration = 1 / this.config.idleAnimationConfig.fps;
+          if (this._idleFrameTimer >= frameDuration) {
+            this._idleFrameTimer -= frameDuration;
+            this._idleFrameIndex++;
+            if (this._idleFrameIndex >= this.config.idleAnimationConfig.frameCount) {
+              // Animation complete — return to static idle image and start waiting
+              this._playingIdle    = false;
+              this._idleFrameIndex = 0;
+              this._idleTimer      = 0;
+            }
+          }
+        } else {
+          // Waiting for the delay before playing the next idle animation
+          this._idleTimer += dt;
+          if (this._idleTimer >= this.config.idleAnimationConfig.delay) {
+            this._playingIdle    = true;
+            this._idleFrameIndex = 0;
+            this._idleFrameTimer = 0;
+            this._idleTimer      = 0;
+          }
+        }
+      }
     }
   }
 
@@ -107,13 +154,22 @@ export class SecondaryCharacter {
       ctx.scale(-1, 1);
     }
 
-    const useWalk = this.state === 'active' && this.images.walkSheet && this.config.animation;
+    const useWalk     = this.state === 'active' && this._isMoving && this.images.walkSheet && this.config.animation;
+    const useIdleAnim = this.state === 'active' && this._playingIdle && this.images.idleSheet && this.config.idleAnimationConfig;
     if (useWalk) {
       const sheet  = this.images.walkSheet;
       const frameW = sheet.width / this.config.animation.frameCount;
       ctx.drawImage(
         sheet,
         this._frameIndex * frameW, 0, frameW, sheet.height,
+        this.facingRight ? screenX : 0, y, w, h
+      );
+    } else if (useIdleAnim) {
+      const sheet  = this.images.idleSheet;
+      const frameW = sheet.width / this.config.idleAnimationConfig.frameCount;
+      ctx.drawImage(
+        sheet,
+        this._idleFrameIndex * frameW, 0, frameW, sheet.height,
         this.facingRight ? screenX : 0, y, w, h
       );
     } else {
