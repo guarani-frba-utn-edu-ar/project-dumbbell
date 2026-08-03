@@ -2,6 +2,12 @@
   {
     "id": "female_fox",
     "idleImage": "female_fox.png",
+    "idleSheet": "female_fox_idle-spriteSheet.png",
+    "idleAnimationConfig": {
+      "frameCount": 4,
+      "fps": 8,
+      "delay": 1.0
+    },
     "walkSheet": "female_fox_walk-spriteSheet.png",
     "animation": {
       "frameCount": 4,
@@ -16,6 +22,7 @@
   {
     "id": "mateo",
     "idleImage": "mateo.png",
+    "idleSheet": null,
     "walkSheet": "mateo_walk-spriteSheet.png",
     "animation": {
       "frameCount": 4,

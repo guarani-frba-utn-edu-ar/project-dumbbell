@@ -43,12 +43,20 @@ background/
     arbusto3.png
 characters/
   female_fox.png
+  female_fox_idle-spriteSheet.png
   female_fox_walk-spriteSheet.png
   mateo.png
   penguin.png
+  penguin_idle-spriteSheet.png
+  penguin_walk-spriteSheet.png
   tonito.png
+  tonito_idle-spriteSheet.png
+  tonito_walk-spriteSheet.png
   brisa.png
+  brisa_walk-spriteSheet.png
   ayolote.png
+  ayolote_idle-spriteSheet.png
+  ayolote_walk-spriteSheet.png
 scenarios/
   parque_avellaneda.png
   china_town.png
@@ -85,29 +93,39 @@ Array of **main character** entries. All main characters move together as a grou
   {
     "id": "female_fox",
     "idleImage": "female_fox.png",
+    "idleSheet": "female_fox_idle-spriteSheet.png",
+    "idleAnimationConfig": { "frameCount": 4, "fps": 8, "delay": 1.0 },
     "walkSheet": "female_fox_walk-spriteSheet.png",
     "animation": { "frameCount": 4, "fps": 8 },
-    "width": 70,
+    "width": 100,
+    "height": 100,
     "xOffset": 0,
-    "speed": 250,
+    "speed": 300,
     "screenPositionX": 0.4
   },
   {
     "id": "mateo",
     "idleImage": "mateo.png",
-    "walkSheet": null,
-    "animation": null,
-    "width": 70,
-    "xOffset": 60
+    "idleSheet": null,
+    "walkSheet": "mateo_walk-spriteSheet.png",
+    "animation": { "frameCount": 4, "fps": 8 },
+    "width": 100,
+    "height": 100,
+    "xOffset": 70
   }
 ]
 ```
 
-- `idleImage` — filename inside `characters/`, shown when standing still
+- `idleImage` — filename inside `characters/`, shown when standing still (and between idle animation plays)
+- `idleSheet` — optional sprite sheet for the idle animation (single row of frames); `null` = no idle animation
+- `idleAnimationConfig.frameCount` — number of frames in the idle sheet
+- `idleAnimationConfig.fps` — frames per second for the idle animation
+- `idleAnimationConfig.delay` — seconds the character stands still before the idle animation plays; after the animation finishes the timer resets and the cycle repeats
 - `walkSheet` — optional sprite sheet filename (single row of frames, all same width); `null` = no walk animation
 - `animation.frameCount` — number of frames in the walk sheet
 - `animation.fps` — frames per second for the walk animation
-- `width` — display width in pixels (height is computed automatically from the idle image's aspect ratio)
+- `width` — display width in pixels (height is computed automatically from the idle image's aspect ratio unless `height` is set)
+- `height` — optional explicit display height in pixels; `null` = derive from idle image aspect ratio
 - `xOffset` — horizontal offset in pixels from the shared world position (`_worldX`); index-0 character is always at `xOffset: 0`
 - `speed` — movement speed in pixels/second (only read from index 0 — the lead character)
 - `screenPositionX` — fraction of canvas width where the lead character is fixed on screen (camera follows from here); only read from index 0
@@ -127,10 +145,13 @@ Top-level settings apply to all secondary characters. Each character in the `cha
     {
       "id": "penguin",
       "idleImage": "penguin.png",
-      "walkSheet": null,
-      "animation": null,
-      "width": 60,
-      "spawnX": 500
+      "idleSheet": "penguin_idle-spriteSheet.png",
+      "idleAnimationConfig": { "frameCount": 4, "fps": 8, "delay": 3.0 },
+      "walkSheet": "penguin_walk-spriteSheet.png",
+      "animation": { "frameCount": 4, "fps": 8 },
+      "width": 90,
+      "height": null,
+      "spawnX": 2000
     }
   ]
 }
@@ -141,8 +162,9 @@ Top-level settings apply to all secondary characters. Each character in the `cha
 - `dropHeight` — pixels above the road from which each character drops
 - `dropDuration` — seconds the drop animation takes (ease-in, like gravity)
 - Per character:
-  - `idleImage`, `walkSheet`, `animation` — same meaning as main characters
+  - `idleImage`, `idleSheet`, `idleAnimationConfig`, `walkSheet`, `animation` — same meaning as main characters
   - `width` — display width in pixels
+  - `height` — optional explicit display height; `null` = derive from idle image aspect ratio
   - `spawnX` — world X at which this character is triggered; each character spawns only once (no re-trigger on backtrack)
 
 Secondary characters are sorted by `spawnX` at startup; the one with the lowest `spawnX` is always closest to the main group after landing.
@@ -245,16 +267,16 @@ Renders `grass-background.png` tiled across the full canvas height. Every odd ti
 Renders `dirt-road.png` repeated side-by-side across the screen. Exposes `getBounds(canvasHeight)` which returns `{ y, height }` — the screen-space position of the road strip, used by all character renderers.
 
 ### `js/character.js` — `Character`
-One instance per entry in `characters.json`. Handles walk animation state (`_frameIndex`, `_frameTimer`) and rendering. Does **not** handle input or movement — those are owned by the Game.
-- `updateAnimation(dt, isMoving, facingRight)` — advances frame index when moving and a walk sheet exists
-- `draw(ctx, screenX, roadY, roadHeight)` — renders idle or walk frame, flipped when facing left. Display height is computed automatically from the idle image's natural aspect ratio × `config.width`.
+One instance per entry in `characters.json`. Handles walk and idle animation state and rendering. Does **not** handle input or movement — those are owned by the Game.
+- `updateAnimation(dt, isMoving, facingRight)` — advances walk frames when moving; when still, counts down the idle delay and plays the idle sheet once per cycle
+- `draw(ctx, screenX, roadY, roadHeight)` — renders walk frame while moving, idle animation frame while the idle cycle is playing, or static idle image otherwise; flipped when facing left
 
 ### `js/secondary-character.js` — `SecondaryCharacter`
 Three-state machine: `pending → dropping → active`.
 - `trigger(landingX)` — starts the drop animation at the given world X
 - `advanceDrop(dt, dropDuration)` — advances the ease-in drop; transitions to `active` when complete
-- `updateAnimation(dt, isMoving)` — same walk animation logic as `Character`; `facingRight` is a plain public property set directly by the Game each frame
-- `draw(ctx, cameraX, roadY, roadHeight, dropHeight)` — shows idle during drop, idle or walk sheet when active
+- `updateAnimation(dt, isMoving)` — same walk and idle animation logic as `Character`; `facingRight` is a plain public property set directly by the Game each frame
+- `draw(ctx, cameraX, roadY, roadHeight, dropHeight)` — shows static idle image during drop; when active, renders walk frame, idle animation frame, or static idle image using the same priority as `Character`
 
 ### `js/scenarios.js` — `Scenarios`
 Renders scenario images at their absolute world positions. Screen Y is computed as `roadCenterY + item.y`. Items outside `[-yLimit, +yLimit]` (read from `roadConfig.yLimit`) or outside the horizontal viewport are skipped. `getWorldBoundary()` returns the rightmost edge of all items and is used to clamp player movement.
@@ -335,7 +357,13 @@ Screen-space conversion:
 ### Walk Animation
 - Walk sheet must be a single horizontal row of equal-width frames
 - Display height is always computed from the idle image's natural aspect ratio applied to `config.width`, so idle and walk frames are guaranteed to occupy the same pixel area
-- When no walk sheet is configured (`null`), the idle image is shown during movement too
+- When no walk sheet is configured (`null`), the static idle image is shown during movement too
+
+### Idle Animation
+- When a character has been standing still for `idleAnimationConfig.delay` seconds the idle sheet plays through once, then the character returns to the static `idleImage` and the delay timer restarts
+- The idle sheet must be a single horizontal row of equal-width frames (same layout as the walk sheet)
+- If the player starts moving mid-animation the idle cycle is interrupted immediately and the walk animation takes over
+- Characters without an `idleSheet` (or with `idleSheet: null`) always show the static `idleImage` while standing still
 
 ### Secondary Character Spawning & Following
 - A secondary character spawns once when `_worldX >= spawnX`
@@ -355,6 +383,9 @@ Add an entry to `config/secondary-characters.json` with a unique `spawnX`. Place
 
 ### Add a walk animation to an existing character
 Set `walkSheet` to the sprite sheet filename and `animation: { "frameCount": N, "fps": F }` in the relevant config entry.
+
+### Add an idle animation to an existing character
+Set `idleSheet` to the sprite sheet filename and `idleAnimationConfig: { "frameCount": N, "fps": F, "delay": D }` in the relevant config entry. Place the sprite sheet in `characters/`. The sheet must be a single horizontal row of `N` equal-width frames. `delay` is the number of seconds the character must stand still before the animation plays.
 
 ### Add a new scenario
 Add an entry to `config/scenarios.json` with a `y` value (world Y of the image's top edge, relative to road centre). Place the image in `scenarios/`. The world boundary automatically extends to include it.
